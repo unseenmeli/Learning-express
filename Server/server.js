@@ -4,8 +4,13 @@ const Anthropic = require('@anthropic-ai/sdk');
 const fs = require('fs').promises;
 const path = require('path');
 const systemPrompts = require('./instructions');
+const { init } = require('@instantdb/admin');
 const app = express();
 
+const db = init({
+  appId: '737da44f-e060-46c5-a28b-c1e2803a4590',
+  adminToken: process.env.INSTANT_ADMIN_TOKEN,
+});
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY
@@ -27,32 +32,37 @@ loadInstructions();
 
 app.use(express.json());
 
-app.use((req, res, next) => {
+app.use((_, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST');
   next();
 });
 
-// Authentication middleware
-const authenticateUser = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'No authentication token provided' });
+const authenticateUser = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ error: 'No auth token provided' });
+    }
+
+    const { user } = await db.auth.verifyToken(token);
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    req.user = user;
+    req.userEmail = user.email;
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    res.status(401).json({ error: 'Authentication failed' });
   }
-  
-  const userEmail = authHeader.substring(7);
-  
-  if (!userEmail || !userEmail.includes('@')) {
-    return res.status(401).json({ error: 'Invalid authentication token' });
-  }
-  
-  req.userEmail = userEmail;
-  next();
 };
 
-app.get('/', (req, res) => {
+app.get('/', (_, res) => {
   res.send('Welcome to my AI app generator!');
 });
 
@@ -102,14 +112,11 @@ app.post('/create_app', authenticateUser, async (req, res) => {
   }
 });
 
-app.get('/reload-instructions', async (req, res) => {
+app.get('/reload-instructions', async (_, res) => {
   await loadInstructions();
   res.json({ message: 'Instructions reloaded', content: instructionsContent });
 });
 
 app.listen(3000, () => {
   console.log('AI App Generator running at http://localhost:3000');
-  console.log('React Native Android Emulator can access it at http://10.0.2.2:3000');
-  console.log('Using Claude AI (Anthropic) for code generation');
-  console.log('Make sure to add your ANTHROPIC_API_KEY or CLAUDE_API_KEY in .env file!');
 });
