@@ -153,6 +153,8 @@ app.get('/reload-instructions', async (_, res) => {
   res.json({ message: 'Instructions reloaded', content: instructionsContent });
 });
 
-app.listen(3000, () => {
-  console.log('AI App Generator running at http://localhost:3000');
+const PORT = process.env.PORT || 8080;
+
+app.listen(PORT, () => {
+  console.log(`AI App Generator running at ${PORT}`);
 });
