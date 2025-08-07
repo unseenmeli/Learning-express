@@ -115,14 +115,12 @@
                 return;
             }
             
-            // Disable button and show loading
             button.disabled = true;
             button.textContent = 'AI is thinking... ⏳';
             resultDiv.style.display = 'block';
             resultDiv.className = 'result';
             resultDiv.innerHTML = '<div class="loading">🤖 AI is generating your app...<br>This might take 10-30 seconds...</div>';
             
-            // Send request to server
             fetch('http://localhost:3000/create_app', {
                 method: 'POST',
                 headers: {
@@ -140,7 +138,6 @@
                 
                 generatedCode = data.code;
                 
-                // Show success and code
                 resultDiv.innerHTML = 
                     '<strong>✅ AI Generated Your App!</strong><br><br>' +
                     '<strong>Description:</strong> ' + data.description + '<br><br>' +
@@ -150,12 +147,10 @@
                     '</code></pre></div>' +
                     '<button class="preview-button" onclick="previewApp()">Preview App in New Window</button>';
                 
-                // Re-enable button
                 button.disabled = false;
                 button.textContent = 'Generate Another App';
             })
             .catch(error => {
-                // Show error
                 resultDiv.className = 'result error';
                 resultDiv.innerHTML = 
                     '<strong>❌ Error:</strong><br><br>' +
@@ -164,7 +159,6 @@
                     '1. Your server is running<br>' +
                     '2. You added your OpenAI API key to server.js';
                 
-                // Re-enable button
                 button.disabled = false;
                 button.textContent = 'Generate App with AI';
             });
@@ -183,19 +177,18 @@
         
         function previewApp() {
             if (!generatedCode) return;
-            
-            // Open new window and write the code
             const newWindow = window.open('', '_blank');
             newWindow.document.write(generatedCode);
             newWindow.document.close();
         }
         
-        // Allow Enter key to generate
         document.getElementById('appDescription').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 generateApp();
             }
         });
+
+        // test for new-branch + make sure the name of repo changed.
     </script>
 </body>
 </html>
