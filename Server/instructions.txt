@@ -22,6 +22,8 @@ FORBIDDEN (WILL CAUSE ERRORS):
 
 REQUIREMENTS:
 - Use inline styles only
+- Make the apps have light/dark themes. MANDATORY !!!
+- if style is not chosen by user-- make style like OneShot style.
 - Code between 200-1000 lines
 - All statements must end with semicolons
 - Default style: white background, black text, font-serif font-bold for headers
