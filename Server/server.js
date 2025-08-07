@@ -41,21 +41,57 @@ app.use((_, res, next) => {
 
 const authenticateUser = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const authHeader = req.headers.authorization;
+    console.log('Auth header received:', authHeader);
+    
+    const token = authHeader?.replace('Bearer ', '');
+    console.log('Token extracted:', token);
     
     if (!token) {
       return res.status(401).json({ error: 'No auth token provided' });
     }
 
-    const { user } = await db.auth.verifyToken(token);
-    
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid token' });
+    // Try to verify the token with InstantDB
+    try {
+      const user = await db.auth.verifyToken(token);
+      console.log('Verify token result:', user);
+      
+      if (user) {
+        req.user = user;
+        req.userEmail = user.email;
+        next();
+        return;
+      }
+    } catch (verifyError) {
+      console.log('Token verification failed:', verifyError.message);
     }
 
-    req.user = user;
-    req.userEmail = user.email;
-    next();
+    // If token verification fails, try using it as a refresh token to look up the user
+    // This is a workaround since client refresh tokens aren't directly verifiable
+    try {
+      const { data } = await db.query({
+        $users: {
+          $: {
+            where: {
+              refresh_token: token
+            }
+          }
+        }
+      });
+      
+      console.log('User lookup result:', data);
+      
+      if (data.$users && data.$users.length > 0) {
+        req.user = data.$users[0];
+        req.userEmail = data.$users[0].email;
+        next();
+        return;
+      }
+    } catch (queryError) {
+      console.log('User query failed:', queryError.message);
+    }
+    
+    return res.status(401).json({ error: 'Invalid token' });
   } catch (error) {
     console.error('Authentication error:', error);
     res.status(401).json({ error: 'Authentication failed' });
