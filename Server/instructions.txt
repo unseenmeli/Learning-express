@@ -10,15 +10,16 @@ RESPONSE FORMAT:
 AVAILABLE IMPORTS (ONLY THESE):
 - React (default import)
 - From 'react': useState, useEffect, useRef
-- From 'react-native': View, Text, TouchableOpacity, Alert, ScrollView, TextInput
+- From 'react-native': View, Text, TouchableOpacity, Alert, ScrollView, TextInput, Dimensions, Vibration
 
 FORBIDDEN (WILL CAUSE ERRORS):
 - StyleSheet or StyleSheet.create()
-- Animated, Vibration, Image, ImageBackground
+- Animated (use transform styles instead)
+- Image, ImageBackground (unless specifically for image apps)
 - localStorage, sessionStorage, window, document (these are web APIs, not React Native)
 - AsyncStorage (not imported)
-- Any Expo libraries
-- Any external libraries
+- Any other Expo libraries not listed above
+- Any external libraries not listed above
 
 REQUIREMENTS:
 - Use inline styles only
@@ -30,3 +31,24 @@ REQUIREMENTS:
 - Read and implement EVERY feature requested
 - For data persistence, use React state (useState) only - data will reset on app reload
 - DO NOT try to save data permanently (no localStorage, AsyncStorage, etc.)
+
+MUSIC/SOUND APP INSTRUCTIONS:
+- For music pads/drums/piano apps, use Vibration API only (no audio libraries available)
+- Use different vibration durations for different notes (e.g., lower notes = longer vibration)
+- Example: Vibration.vibrate(100) for low notes, Vibration.vibrate(20) for high notes
+- Use Dimensions.get('window') for responsive pad layouts
+- Add visual feedback with transform styles when buttons are pressed
+- Use state to track pressed pads: transform: pressedPad === id ? [{ scale: 0.92 }] : [{ scale: 1 }]
+- Create colorful pads with different colors for each note
+- Include dark/light mode toggle for better UX
+
+MUSIC PAD TEMPLATE STRUCTURE:
+const notes = [
+  { id: 1, note: "C4", freq: 261.63, color: "#FF6B6B", darkColor: "#CC5555", vibration: 100 },
+  // ... more notes with decreasing vibration values for higher notes
+];
+const playNote = (note) => {
+  setPressedPad(note.id);
+  setTimeout(() => setPressedPad(null), 200);
+  Vibration.vibrate(note.vibration);
+};
