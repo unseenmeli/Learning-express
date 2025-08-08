@@ -155,6 +155,6 @@ app.get('/reload-instructions', async (_, res) => {
 
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => {
-  console.log(`AI App Generator running at ${PORT}`);
-});
+ app.listen(process.env.PORT || 8080, '0.0.0.0', () => {
+    console.log(`Server running on port ${process.env.PORT || 8080}`);
+  });
